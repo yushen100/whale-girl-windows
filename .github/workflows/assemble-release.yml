@@ -1,0 +1,43 @@
+name: Assemble verified release upload
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Join verified temporary parts and upload the original ZIP
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import subprocess,json,pathlib,hashlib,shutil,os
+          repo=os.environ['GH_REPO'];rid=427878932
+          expected='490df9ea7f9ff08912768e77b9b9549df09c79fdd62f98b072770c2f61020d74'
+          def api(path):return json.loads(subprocess.check_output(['gh','api',path]))
+          release=api(f'repos/{repo}/releases/{rid}')
+          assert release['draft'] and release['tag_name']=='v3.53.1','Wrong release or already public'
+          prefix='upload-part-1029-full-'
+          parts=sorted((a for a in release['assets'] if a['name'].startswith(prefix)),key=lambda a:a['name'])
+          assert len(parts)==49 and all(a['name']==f'{prefix}{i:03d}-of-049.bin' for i,a in enumerate(parts,1)),'Parts incomplete'
+          folder=pathlib.Path('chunks');folder.mkdir()
+          subprocess.run(['gh','release','download','v3.53.1','--repo',repo,'--pattern',prefix+'*','--dir',str(folder)],check=True)
+          output=pathlib.Path('whale-girl-windows-3.53.1-full.zip')
+          with output.open('wb') as dest:
+              for a in parts:
+                  p=folder/a['name'];assert p.stat().st_size==a['size']
+                  with p.open('rb') as source:shutil.copyfileobj(source,dest,1024*1024)
+          assert output.stat().st_size==404301912 and hashlib.file_digest(output.open('rb'),'sha256').hexdigest()==expected,'Original ZIP digest mismatch'
+          subprocess.run(['gh','release','upload','v3.53.1',str(output),'--repo',repo,'--clobber'],check=True)
+          fresh=api(f'repos/{repo}/releases/{rid}')
+          asset=next(a for a in fresh['assets'] if a['name']==output.name)
+          assert asset['size']==404301912 and asset.get('digest')=='sha256:'+expected,'Server digest mismatch'
+          for a in parts:
+              assert a['name'].startswith(prefix)
+              subprocess.run(['gh','api','--method','DELETE',f'repos/{repo}/releases/assets/{a["id"]}'],check=True)
+          print('Original ZIP uploaded and verified; temporary parts deleted. Release remains draft for final validation.')
+          PY
