@@ -1,0 +1,18 @@
+{
+  "wechat": {
+    "groupPersonas": {
+      "100000001@chatroom": {
+        "formal": true,
+        "name": "示例技术群1"
+      },
+      "100000002@chatroom": {
+        "formal": true,
+        "name": "示例技术群2"
+      },
+      "100000003@chatroom": {
+        "formal": true,
+        "name": "示例技术群3"
+      }
+    }
+  }
+}
