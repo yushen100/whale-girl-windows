@@ -22,7 +22,7 @@
 | `whale-girl-windows-3.53.1-full.zip` | Windows x64 完整运行包，必须完整下载 |
 | `whale-girl-windows-3.53.1-source.zip` | 脱敏源码包，供开发者使用 |
 | `SHA256SUMS.txt` | 上述两套 ZIP 的字节大小与 SHA-256 |
-| `1029_校验下载包_v1.ps1` | 下载 ZIP 后一键核对大小和 SHA-256，校验通过才解压 |
+| `1029_verify_extract_v1.ps1` | 下载 ZIP 后一键核对大小和 SHA-256，校验通过才解压 |
 
 使用完整包只需下载完整包 ZIP、`SHA256SUMS.txt` 和校验脚本三项，放在同一目录。右键使用 PowerShell 运行校验脚本，全部对应大小及 SHA-256 通过后再解压。源码包使用者同样下载源码 ZIP 与这两个校验文件。不把 GitHub 自动生成的 Source code 下载项算进附件清单。
 
